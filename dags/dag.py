@@ -1,11 +1,9 @@
-import requests
 from airflow import DAG
 from datetime import datetime, timedelta
 import pandas as pd
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-import time
 
 from main import data_creation, data_cleaning, create_author_books_df_with_count, calculate_book_age, year_conversion
 
@@ -138,9 +136,6 @@ insert_author_data_task = PythonOperator(
     dag=dag,
 )
 
-
-
-
 """
 year_conversion = PythonOperator(
     task_id='year_conversion',
@@ -158,5 +153,5 @@ book_age = PythonOperator(
 
 data_cleaning >> create_table_task >> insert_book_data_task
 
-
+insert_book_data_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task
 

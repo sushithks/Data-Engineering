@@ -94,16 +94,6 @@ def year_conversion(df):
 #df = data_creation()
 #final_df = data_cleaning(df)
 #print(final_df)
-#df = pd.read_csv('C:/Users/sushi/OneDrive/Desktop/Sushith/DE/books_data/books.csv', delimiter=';', on_bad_lines='skip')
 #new_df= data_cleaning(df)
 #print(new_df.columns)
-
-#df = pd.read_csv('books.scv', delimiter=';', on_bad_lines='skip')
-
-#print(df.info())
-#year_conversion(df)
-#print(df.info())
-#new_df = create_author_books_df_with_count(df)
-#new_df = data_cleaning(df)
-#print(new_df.info())
 
