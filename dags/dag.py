@@ -36,6 +36,36 @@ def insert_book_data_into_postgres(ti):
         ))
 
 
+def author_books_data(ti):
+    author_data = ti.xcom_pull(key='book_list', task_ids='data-cleaning')
+
+    final_data = create_author_books_df_with_count(author_data)
+    final_data.xcom_push(key='author_list', value=final_data)
+
+
+
+
+def insert_author_data_into_postgres(ti):
+
+    author_data = ti.xcom_pull(key='author_list', task_ids='author_books_data_creation')
+
+
+    if author_data.empty:
+        raise ValueError("No book data found")
+
+    postgres_hook = PostgresHook(postgres_conn_id='books_connection')
+    insert_query = """
+    INSERT INTO author (Book_Author, Book_Title, Book_Count)
+    VALUES (%s, %s, %s)
+    """
+    for index, author in author_data.iterrows():
+        # Ensure that author is a pandas Series, and access columns with string indices
+        postgres_hook.run(insert_query, parameters=(
+            author['Book_Author'],
+            author['Book_Title'],
+            author['Book_Count']
+        ))
+
 
 default_args = {
     'owner': 'airflow',
@@ -53,33 +83,14 @@ dag = DAG(
 )
 
 data_cleaning = PythonOperator(
-    task_id='data-cleaning',
+    task_id='data_cleaning',
     python_callable=data_cleaning,
     op_kwargs={'data': data},
     provide_context=True,
     dag=dag
 )
-"""
-author_table_creation = PythonOperator(
-    task_id='data-cleaning',
-    python_callable=create_author_books_df_with_count,
-    op_args=df,
-    dag=dag,
-)
 
-year_conversion = PythonOperator(
-    task_id='year_conversion',
-    python_callable=year_conversion,
-    provide_context=True,
-    dag=dag,
-)
-book_age = PythonOperator(
-    task_id='Age_of_book',
-    python_callable=calculate_book_age,
-    provide_context=True,
-    dag=dag,
-)
-"""
+
 create_table_task = PostgresOperator(
     task_id='create_table',
     postgres_conn_id='books_connection',
@@ -100,6 +111,50 @@ insert_book_data_task = PythonOperator(
     python_callable=insert_book_data_into_postgres,
     dag=dag,
 )
+
+
+author_books_data_creation = PythonOperator(
+    task_id='author_books_data_creation',
+    python_callable=author_books_data,
+    dag=dag,
+)
+
+create_author_table_task = PostgresOperator(
+    task_id='create_author_table',
+    postgres_conn_id='books_connection',
+    sql="""
+    CREATE TABLE IF NOT EXISTS author (
+        Book_Author TEXT,
+        Book_Title TEXT,
+        Book_Count bigint
+    );
+    """,
+    dag=dag,
+)
+
+insert_author_data_task = PythonOperator(
+    task_id='insert_author_data',
+    python_callable=insert_author_data_into_postgres,
+    dag=dag,
+)
+
+
+
+
+"""
+year_conversion = PythonOperator(
+    task_id='year_conversion',
+    python_callable=year_conversion,
+    provide_context=True,
+    dag=dag,
+)
+book_age = PythonOperator(
+    task_id='Age_of_book',
+    python_callable=calculate_book_age,
+    provide_context=True,
+    dag=dag,
+)
+"""
 
 data_cleaning >> create_table_task >> insert_book_data_task
 

@@ -72,7 +72,10 @@ def create_author_books_df_with_count(df):
     # Add a new column 'Book Count' to store the count of books for each author
     author_books_df['Book_Count'] = author_books_df['Book_Title'].apply(len)
 
-    return author_books_df
+    author_books_df.xcom_push(key='author_list', value=author_books_df)
+
+
+   # return author_books_df
 
 
 def calculate_book_age(df):
@@ -87,6 +90,7 @@ def year_conversion(df):
     return df
 
 
+#
 #df = data_creation()
 #final_df = data_cleaning(df)
 #print(final_df)
