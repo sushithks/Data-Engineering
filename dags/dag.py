@@ -136,13 +136,29 @@ insert_author_data_task = PythonOperator(
     dag=dag,
 )
 
-"""
+create_author_date_table_task = PostgresOperator(
+    task_id='create_author_date_table_task',
+    postgres_conn_id='books_connection',
+    sql="""
+    CREATE TABLE IF NOT EXISTS final_books (
+        ISBN TEXT PRIMARY KEY,
+        Book_Title TEXT,
+        Book_Author TEXT,
+        Year_Of_Publication INT,
+        Publisher TEXT 
+    );
+    """,
+    dag=dag,
+)
+
+
 year_conversion = PythonOperator(
     task_id='year_conversion',
     python_callable=year_conversion,
     provide_context=True,
     dag=dag,
 )
+""""
 book_age = PythonOperator(
     task_id='Age_of_book',
     python_callable=calculate_book_age,
