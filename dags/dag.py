@@ -4,6 +4,7 @@ import pandas as pd
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.operators.dummy import DummyOperator
 
 from main import data_creation, data_cleaning, create_author_books_df_with_count, calculate_book_age, year_conversion
 
@@ -111,6 +112,11 @@ dag = DAG(
     schedule_interval=timedelta(days=1)
 )
 
+dag_start = DummyOperator(
+    task_id='dag_start',
+    dag=dag)
+
+
 data_cleaning = PythonOperator(
     task_id='data_cleaning',
     python_callable=data_cleaning,
@@ -167,8 +173,8 @@ insert_author_data_task = PythonOperator(
     dag=dag,
 )
 
-create_author_date_table_task = PostgresOperator(
-    task_id='create_author_date_table_task',
+create_date_table_task = PostgresOperator(
+    task_id='create_date_table_task',
     postgres_conn_id='books_connection',
     sql="""
     CREATE TABLE IF NOT EXISTS final_books (
@@ -183,8 +189,8 @@ create_author_date_table_task = PostgresOperator(
 )
 
 
-year_conversion = PythonOperator(
-    task_id='year_conversion',
+year_conversion_task = PythonOperator(
+    task_id='year_conversion_task',
     python_callable=year_conversion,
     dag=dag,
 )
@@ -203,7 +209,12 @@ book_age = PythonOperator(
 )
 """
 
+dag_end = DummyOperator(
+    task_id='dag_end',
+    dag=dag)
+
 data_cleaning >> create_table_task >> insert_book_data_task
 
-insert_book_data_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task
+insert_book_data_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> dag_end
 
+insert_book_data_task >> create_date_table_task >> year_conversion_task >> insert_year_data_task >> dag_end
