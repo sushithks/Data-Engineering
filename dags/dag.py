@@ -41,6 +41,12 @@ def author_books_data(ti):
     final_data.xcom_push(key='author_list', value=final_data)
 
 
+def year_conversion(ti):
+    year_data = ti.xcom_pull(key='book_list', task_ids='data-cleaning')
+    year_data['Year-Of-Publication'] = pd.to_numeric(year_data['Year-Of-Publication'], errors='coerce')
+    year_data.xcom_push(key='year_data', value=year_data)
+
+
 
 
 def insert_author_data_into_postgres(ti):
@@ -63,6 +69,31 @@ def insert_author_data_into_postgres(ti):
             author['Book_Title'],
             author['Book_Count']
         ))
+
+
+def insert_year_data_into_postgres(ti):
+
+    year_data = ti.xcom_pull(key='author_list', task_ids='author_books_data_creation')
+
+
+    if year_data.empty:
+        raise ValueError("No book data found")
+
+    postgres_hook = PostgresHook(postgres_conn_id='books_connection')
+    insert_query = """
+    INSERT INTO author (Book_Author, Book_Title, Book_Count)
+    VALUES (%s, %s, %s)
+    """
+    for index, year in year_data.iterrows():
+        postgres_hook.run(insert_query, parameters=(
+            year['ISBN'],
+            year['Book_Title'],
+            year['Book_Author'],
+            year['Year_Of_Publication'],
+            year['Publisher']
+        ))
+
+
 
 
 default_args = {
@@ -155,7 +186,12 @@ create_author_date_table_task = PostgresOperator(
 year_conversion = PythonOperator(
     task_id='year_conversion',
     python_callable=year_conversion,
-    provide_context=True,
+    dag=dag,
+)
+
+insert_year_data_task = PythonOperator(
+    task_id='insert_year_data',
+    python_callable=insert_year_data_into_postgres,
     dag=dag,
 )
 """"

@@ -75,9 +75,8 @@ def create_author_books_df_with_count(df):
     author_books_df.xcom_push(key='author_list', value=author_books_df)
 
 
-   # return author_books_df
-""""
 
+""""
 def calculate_book_age(df):
     # Get the current year
     current_year = datetime.datetime.now().year
@@ -85,15 +84,11 @@ def calculate_book_age(df):
     df['Book_Age'] = current_year - df['Year-Of-Publication']
     return df
 """
+
 def year_conversion(df):
     df['Year-Of-Publication'] = pd.to_numeric(df['Year-Of-Publication'], errors='coerce')
     return df
 
 
-#
-#df = data_creation()
-#final_df = data_cleaning(df)
-#print(final_df)
-#new_df= data_cleaning(df)
-#print(new_df.columns)
+
 
