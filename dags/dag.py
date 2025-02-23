@@ -147,6 +147,7 @@ insert_book_data_task = PythonOperator(
     python_callable=insert_book_data_into_postgres,
     dag=dag,
 )
+
 data_cleaning_end = DummyOperator(
     task_id='data_cleaning_end',
     dag=dag)
@@ -184,6 +185,10 @@ author_books_data_creation_end = DummyOperator(
     task_id='author_books_data_creation_end',
     dag=dag)
 
+date_correction_start = DummyOperator(
+    task_id='date_correction_start',
+    dag=dag)
+
 create_date_table_task = PostgresOperator(
     task_id='create_date_table_task',
     postgres_conn_id='books_connection',
@@ -211,6 +216,11 @@ insert_year_data_task = PythonOperator(
     python_callable=insert_year_data_into_postgres,
     dag=dag,
 )
+
+date_correction_end = DummyOperator(
+    task_id='date_correction_end',
+    dag=dag)
+
 """"
 book_age = PythonOperator(
     task_id='Age_of_book',
