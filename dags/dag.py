@@ -95,6 +95,7 @@ def insert_year_data_into_postgres(ti):
         ))
 
 
+# Dummy tasks can be replaced with slack notification
 
 
 default_args = {
@@ -146,10 +147,16 @@ insert_book_data_task = PythonOperator(
     python_callable=insert_book_data_into_postgres,
     dag=dag,
 )
+data_cleaning_end = DummyOperator(
+    task_id='data_cleaning_end',
+    dag=dag)
 
+author_books_data_creation = DummyOperator(
+    task_id='author_books_data_creation_start',
+    dag=dag)
 
-author_books_data_creation = PythonOperator(
-    task_id='author_books_data_creation',
+author_books_data_creation_start = PythonOperator(
+    task_id='author_books_data_creation_start',
     python_callable=author_books_data,
     dag=dag,
 )
@@ -172,6 +179,10 @@ insert_author_data_task = PythonOperator(
     python_callable=insert_author_data_into_postgres,
     dag=dag,
 )
+
+author_books_data_creation_end = DummyOperator(
+    task_id='author_books_data_creation_end',
+    dag=dag)
 
 create_date_table_task = PostgresOperator(
     task_id='create_date_table_task',
