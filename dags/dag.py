@@ -152,12 +152,12 @@ data_cleaning_end = DummyOperator(
     task_id='data_cleaning_end',
     dag=dag)
 
-author_books_data_creation = DummyOperator(
+author_books_data_creation_start = DummyOperator(
     task_id='author_books_data_creation_start',
     dag=dag)
 
-author_books_data_creation_start = PythonOperator(
-    task_id='author_books_data_creation_start',
+author_books_data_creation = PythonOperator(
+    task_id='author_books_data_creation',
     python_callable=author_books_data,
     dag=dag,
 )
@@ -234,8 +234,8 @@ dag_end = DummyOperator(
     task_id='dag_end',
     dag=dag)
 
-data_cleaning >> create_table_task >> insert_book_data_task
+data_cleaning >> create_table_task >> insert_book_data_task >> data_cleaning_end
 
-insert_book_data_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> dag_end
+data_cleaning_end >> author_books_data_creation_start >>  insert_book_data_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> author_books_data_creation_end >> dag_end
 
-insert_book_data_task >> create_date_table_task >> year_conversion_task >> insert_year_data_task >> dag_end
+data_cleaning_end >> date_correction_start >> insert_book_data_task >> create_date_table_task >> year_conversion_task >> insert_year_data_task >> date_correction_end >>dag_end
