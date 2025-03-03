@@ -13,7 +13,7 @@ data = data_creation()
 
 def insert_book_data_into_postgres(ti):
 
-    json_book_data = ti.xcom_pull(key='book_list', task_ids='data-cleaning')
+    json_book_data = ti.xcom_pull(key='book_list', task_ids='data_cleaning')
     book_data = pd.read_json(json_book_data)
 
     if book_data.empty:
@@ -36,14 +36,14 @@ def insert_book_data_into_postgres(ti):
 
 
 def author_books_data(ti):
-    author_data = ti.xcom_pull(key='book_list', task_ids='data-cleaning')
+    author_data = ti.xcom_pull(key='book_list', task_ids='data_cleaning')
 
     final_data = create_author_books_df_with_count(author_data)
     final_data.xcom_push(key='author_list', value=final_data)
 
 
 def year_conversion(ti):
-    year_data = ti.xcom_pull(key='book_list', task_ids='data-cleaning')
+    year_data = ti.xcom_pull(key='book_list', task_ids='data_cleaning')
     year_data['Year-Of-Publication'] = pd.to_numeric(year_data['Year-Of-Publication'], errors='coerce')
     year_data.xcom_push(key='year_data', value=year_data)
 
@@ -236,7 +236,6 @@ dag_end = DummyOperator(
 
 dag_start >> data_cleaning >> create_table_task >> insert_book_data_task >> data_cleaning_end
 
-data_cleaning_end >>  author_books_data_creation_start_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> author_books_data_creation_end
-#data_cleaning_end >>   insert_book_data_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> author_books_data_creation_end >> dag_end
+data_cleaning_end >>  author_books_data_creation_start_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> author_books_data_creation_end >> dag_end
 
-#data_cleaning_end >> date_correction_start >> insert_book_data_task >> create_date_table_task >> year_conversion_task >> insert_year_data_task >> date_correction_end >>dag_end
+data_cleaning_end >> date_correction_start >> create_date_table_task >> year_conversion_task >> insert_year_data_task >> date_correction_end >>dag_end
