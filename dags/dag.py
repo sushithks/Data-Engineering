@@ -6,7 +6,7 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.dummy import DummyOperator
 
-from main import data_creation, data_cleaning, create_author_books_df_with_count, calculate_book_age, year_conversion
+from main import data_creation, data_cleaning, create_author_books_df_with_count
 
 data = data_creation()
 
@@ -152,7 +152,7 @@ data_cleaning_end = DummyOperator(
     task_id='data_cleaning_end',
     dag=dag)
 
-author_books_data_creation_start = DummyOperator(
+author_books_data_creation_start_task = DummyOperator(
     task_id='author_books_data_creation_start',
     dag=dag)
 
@@ -234,8 +234,9 @@ dag_end = DummyOperator(
     task_id='dag_end',
     dag=dag)
 
-data_cleaning >> create_table_task >> insert_book_data_task >> data_cleaning_end
+dag_start >> data_cleaning >> create_table_task >> insert_book_data_task >> data_cleaning_end
 
-data_cleaning_end >> author_books_data_creation_start >>  insert_book_data_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> author_books_data_creation_end >> dag_end
+data_cleaning_end >>  author_books_data_creation_start_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> author_books_data_creation_end
+#data_cleaning_end >>   insert_book_data_task >> author_books_data_creation >> create_author_table_task >> insert_author_data_task >> author_books_data_creation_end >> dag_end
 
-data_cleaning_end >> date_correction_start >> insert_book_data_task >> create_date_table_task >> year_conversion_task >> insert_year_data_task >> date_correction_end >>dag_end
+#data_cleaning_end >> date_correction_start >> insert_book_data_task >> create_date_table_task >> year_conversion_task >> insert_year_data_task >> date_correction_end >>dag_end
