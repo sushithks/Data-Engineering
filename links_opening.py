@@ -10,7 +10,7 @@ def fetch_yahoo_finance(links_csv):
     df = pd.read_csv(links_csv)
 
     # Ensure column name is correct
-    if "Data" not in df.columns:
+    if "Links" not in df.columns:
         print("CSV does not have a 'Links' column.")
         return
 
